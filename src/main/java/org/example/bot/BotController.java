@@ -788,6 +788,30 @@ public class BotController {
                             bot.execute(new SendMessage(playerId, "☝️ Here is a video guide on how to register.").parseMode(HTML));
                         } else if (messageCallbackText.equals("ImRegistered")) {
                             bot.execute(new SendMessage(playerId, "\uD83C\uDD94\uD83D\uDCEC Okay! Now, please send me your Quotex ID in the format <i>ID12345678</i>. ").parseMode(HTML));
+                        } else if (messageCallbackText.equals("YesIM")) {
+                            String userKey = USER_DB_MAP_KEY + ":" + playerId;
+                            try {
+                                User user = convertJsonToUser(jedis.get(userKey));
+                                String sendAdminUID = user.getUID();
+                                User adminUser = convertJsonToUser(jedis.get(AdminID));
+                                if (Integer.parseInt(sendAdminUID.substring(0, 2)) >= Integer.parseInt(adminUser.getUID())) {
+                                    bot.execute(new SendMessage(Long.valueOf(AdminID), "User with Telegram ID<code>" + playerId + "</code> and UID <code>" + sendAdminUID + "</code> \uD83D\uDFE2 want to register. Write 'A11111111' (telegram id) to approve and 'D1111111' to disapprove").parseMode(HTML));
+                                    bot.execute(new SendMessage(playerId, "\uD83C\uDF89\uD83D\uDC4D Awesome! Your ID will be checked shortly."));
+                                } else {
+                                    InlineKeyboardButton button12 = new InlineKeyboardButton("Register here");
+                                    InlineKeyboardButton button13 = new InlineKeyboardButton("Registered!");
+                                    button12.url("bit.ly/SiriTradeBot");
+                                    button13.callbackData("ImRegistered");
+                                    InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+                                    inlineKeyboardMarkup.addRow(button12, button13);
+                                    bot.execute(new SendMessage(playerId, "❌ Your ID is invalid. Please make sure you registered using the 'Register here' button and sent a new UID. After registering, press 'Registered!' again. \uD83D\uDE4F\uD83D\uDD0D\uD83D\uDD04\n" +
+                                            "\n" +
+                                            "\uD83C\uDD98\uD83D\uDCDE\uD83D\uDC65 If you're still facing issues, please contact support by using the command /help. They'll be able to assist you further.").replyMarkup(inlineKeyboardMarkup));
+                                }
+                            } catch (Exception e) {
+                                bot.execute(new SendMessage(playerId, "❌ There was an issue. Please send your ID again.  "));
+                                e.printStackTrace();
+                            }
                         } else if (!messageText.startsWith("/")) {
                             try {
                                 Pattern pattern = Pattern.compile("\\d{8}");
@@ -813,31 +837,7 @@ public class BotController {
                                 bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again.  "));
                                 e.printStackTrace();
                             }
-                        } else if (messageCallbackText.equals("YesIM")) {
-                            String userKey = USER_DB_MAP_KEY + ":" + playerId;
-                            try {
-                                User user = convertJsonToUser(jedis.get(userKey));
-                                String sendAdminUID = user.getUID();
-                                User adminUser = convertJsonToUser(jedis.get(AdminID));
-                                if (Integer.parseInt(sendAdminUID.substring(0, 2)) >= Integer.parseInt(adminUser.getUID())) {
-                                    bot.execute(new SendMessage(Long.valueOf(AdminID), "User with Telegram ID<code>" + playerId + "</code> and UID <code>" + sendAdminUID + "</code> \uD83D\uDFE2 want to register. Write 'A11111111' (telegram id) to approve and 'D1111111' to disapprove").parseMode(HTML));
-                                    bot.execute(new SendMessage(playerId, "\uD83C\uDF89\uD83D\uDC4D Awesome! Your ID will be checked shortly."));
-                                } else {
-                                    InlineKeyboardButton button12 = new InlineKeyboardButton("Register here");
-                                    InlineKeyboardButton button13 = new InlineKeyboardButton("Registered!");
-                                    button12.url("bit.ly/SiriTradeBot");
-                                    button13.callbackData("ImRegistered");
-                                    InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-                                    inlineKeyboardMarkup.addRow(button12, button13);
-                                    bot.execute(new SendMessage(playerId, "❌ Your ID is invalid. Please make sure you registered using the 'Register here' button and sent a new UID. After registering, press 'Registered!' again. \uD83D\uDE4F\uD83D\uDD0D\uD83D\uDD04\n" +
-                                            "\n" +
-                                            "\uD83C\uDD98\uD83D\uDCDE\uD83D\uDC65 If you're still facing issues, please contact support by using the command /help. They'll be able to assist you further.").replyMarkup(inlineKeyboardMarkup));
-                                }
-                            } catch (Exception e) {
-                                bot.execute(new SendMessage(playerId, "❌ There was an issue. Please send your ID again.  "));
-                                e.printStackTrace();
-                            }
-                        } else if (messageText.equals("Get Signal")) {
+                        }  else if (messageText.equals("Get Signal")) {
                             bot.execute(new SendMessage(playerId, "Before you can try any signals, it's essential to complete the registration process. \uD83D\uDCDD\uD83D\uDD10"));
                         }
                     }
