@@ -23,6 +23,8 @@ import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.pengrad.telegrambot.model.request.ParseMode.HTML;
 import static org.example.bot.DateUtil.isWithinTradingHours;
@@ -57,7 +59,6 @@ public class BotController {
         bot.setUpdatesListener(updates -> {
             try (Jedis jedis = jedisPool.getResource()) {
                 updates.forEach(update -> {
-                    //              jedis.flushAll();
                     String playerName = "Trader";
                     long playerId;
                     String messageText = "";
@@ -87,13 +88,6 @@ public class BotController {
                         messageId = 0;
                         playerId = 0L;
                     }
-
-
-
-//                    Date adminDate = new Date();
-//                    User adminUser2 = new User("Admin", "20", true, true, adminDate, adminDate, 1, true, true, true, 1, 50, 1, 1);
-//                    jedis.set(AdminID, convertUserToJson(adminUser2));
-
 
                     if (playerId != Long.parseLong(AdminID)) {
                         try {
@@ -341,8 +335,8 @@ public class BotController {
                                     "button and sent a new UID. After registering, press 'Registered' again. \uD83D\uDE4F\n" + "\n" +
                                     "If you're still facing issues, please contact support by using the command /help. They'll be able to assist you further. ").replyMarkup(inlineKeyboardMarkup));
                             bot.execute(new SendMessage(AdminID, "Registration for " + tgID + " was disapproved"));
-                            bot.execute(new SendVideo(playerId, videoRegistrationFile));
-                            bot.execute(new SendMessage(playerId, "☝️ Here is a video guide on how to register.").parseMode(HTML));
+                            bot.execute(new SendVideo(tgID, videoRegistrationFile));
+                            bot.execute(new SendMessage(tgID, "☝️ Here is a video guide on how to register.").parseMode(HTML));
                         } else if (messageText.startsWith("Y") || messageText.startsWith("y") || messageText.startsWith("Н") || messageText.startsWith("н")) {
                             try {
                                 String tgID = messageText.substring(1);
@@ -816,27 +810,33 @@ public class BotController {
                                 bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again.  "));
                                 e.printStackTrace();
                             }
-                        } else if ((!messageText.startsWith("/") && !messageText.equals("/changemode")) && (messageText.startsWith("user") || messageText.startsWith("USER") && messageText.length() == 12 || messageText.length() == 13)) {
+                        } else if (!messageText.startsWith("/")) {
                             try {
-                                InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-                                InlineKeyboardButton button5 = new InlineKeyboardButton("Yes");
-                                InlineKeyboardButton button6 = new InlineKeyboardButton("No");
-                                button5.callbackData("YesIM");
-                                button6.callbackData("ImRegistered");
-                                inlineKeyboardMarkup.addRow(button5, button6);
-                                String text = messageText.replaceAll("\\s", "");
-                                uid = text.substring(4, 12);
-                                Date date = new Date();
-                                Date depositDate = DateUtil.addDays(date, -1);
-                                User newUser = new User(playerName, uid, false, false, date, depositDate, 1, true, true, true, 1, 50, 0, 0);
-                                bot.execute(new SendMessage(playerId, "\uD83D\uDCCC Is your ID " + uid + " correct? ✅\uD83C\uDD94").replyMarkup(inlineKeyboardMarkup).parseMode(HTML));
-                                String userKey = USER_DB_MAP_KEY + ":" + playerId;
-                                jedis.set(userKey, convertUserToJson(newUser));
+                                Pattern pattern = Pattern.compile("\\d{8}");
+                                Matcher matcher = pattern.matcher(messageText);
+                                if (matcher.find()) {
+                                    uid = matcher.group();
+                                    InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+                                    InlineKeyboardButton button5 = new InlineKeyboardButton("Yes");
+                                    InlineKeyboardButton button6 = new InlineKeyboardButton("No");
+                                    button5.callbackData("YesIM");
+                                    button6.callbackData("ImRegistered");
+                                    inlineKeyboardMarkup.addRow(button5, button6);
+                                    Date date = new Date();
+                                    Date depositDate = DateUtil.addDays(date, -1);
+                                    User newUser = new User(playerName, uid, false, false, date, depositDate, 1, true, true, true, 1, 50, 0, 0);
+                                    bot.execute(new SendMessage(playerId, "\uD83D\uDCCC Is your ID " + uid + " correct? ✅\uD83C\uDD94").replyMarkup(inlineKeyboardMarkup).parseMode(HTML));
+                                    String userKey = USER_DB_MAP_KEY + ":" + playerId;
+                                    jedis.set(userKey, convertUserToJson(newUser));
+                                } else {
+                                    bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again.  "));
+                                }
                             } catch (Exception e) {
                                 bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again.  "));
                                 e.printStackTrace();
                             }
-                        } else if (messageCallbackText.equals("YesIM")) {
+                        }
+                        else if (messageCallbackText.equals("YesIM")) {
                             String userKey = USER_DB_MAP_KEY + ":" + playerId;
                             try {
                                 User user = convertJsonToUser(jedis.get(userKey));
