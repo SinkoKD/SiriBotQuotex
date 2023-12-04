@@ -857,7 +857,7 @@ public class BotController {
                                             "\uD83C\uDD98\uD83D\uDCDE\uD83D\uDC65 If you're still facing issues, please contact support by using the command /help. They'll be able to assist you further.").replyMarkup(inlineKeyboardMarkup));
                                 }
                             } catch (Exception e) {
-                                bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again.  "));
+                                bot.execute(new SendMessage(playerId, "❌ There was an issue. Please send your ID again.  "));
                                 e.printStackTrace();
                             }
                         } else if (messageText.startsWith("/") || messageText.equals("Get Signal")) {
