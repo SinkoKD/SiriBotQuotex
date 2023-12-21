@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import static com.pengrad.telegrambot.model.request.ParseMode.HTML;
 import static org.example.bot.DateUtil.isWithinTradingHours;
 import static org.example.bot.JedisActions.*;
+import static org.example.bot.JedisActions.addSpaceAfterNthCharacter;
 
 
 public class BotController {
@@ -170,6 +171,12 @@ public class BotController {
                                 System.out.println(messageText.length());
                                 String tgID = messageText.substring(1);
                                 System.out.println(tgID);
+                                String TGId = USER_DB_MAP_KEY + ":" + tgID;
+                                User userBanned = convertJsonToUser(jedis.get(TGId));
+                                Date currentDate = new Date();
+                                userBanned.setLastTimePressedDeposit(DateUtil.addMinutes(currentDate, 3));
+                                String updatedBannedUser = convertUserToJson(userBanned);
+                                jedis.set(TGId, updatedBannedUser);
                                 registrationApprove(Long.parseLong(tgID));
                                 registrationApprove(Long.parseLong(tgID));
                                 bot.execute(new SendMessage(tgID, "✅ Fantastic, your account is confirmed! T" +
@@ -424,39 +431,6 @@ public class BotController {
                         if (messageText.equals("/newSignal") || messageCallbackText.equals("getSignal") || messageText.equals("/newsignal")) {
                             String userKey = USER_DB_MAP_KEY + ":" + playerId;
                             User currentUser = convertJsonToUser(jedis.get(userKey));
-                            //   LocalTime currentTime = LocalTime.now().withNano(0).withSecond(0);
-                            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-                            Instant currentInstant = Instant.now();
-                            LocalTime currentTime = currentInstant.atZone(ZoneId.of("UTC")).toLocalTime();
-                            List<String> listOfPairs = new ArrayList<>();
-                            int modeChoose = currentUser.getModeChoose();
-
-                            if (modeChoose == 1) {
-                                listOfPairs.addAll(Arrays.asList(
-                                        "AUD/CAD OTC", "AUD/CHF OTC", "AUD/JPY OTC", "CAD/CHF OTC",
-                                        "CAD/JPY OTC", "CHF/JPY OTC", "EUR/CAD OTC", "EUR/CHF OTC",
-                                        "GBP/AUD OTC", "NZD/CAD OTC", "NZD/CHF OTC", "NZD/JPY OTC",
-                                        "USD/BRL OTC", "USD/CAD OTC", "AUD/USD OTC", "USD/INR OTC",
-                                        "EUR/AUD OTC", "GBP/JPY OTC"
-                                ));
-                            } else if (modeChoose == 2 && isWithinTradingHours(currentTime)) {
-                                listOfPairs.addAll(Arrays.asList(
-                                        "EUR/AUD", "EUR/GBP", "EUR/JPY", "EUR/USD", "GBP/CAD",
-                                        "GBP/JPY", "GBP/USD", "USD/JPY", "CAD/JPY"
-                                ));
-                            } else if (modeChoose == 3 && isWithinTradingHours(currentTime)) {
-                                listOfPairs.addAll(Arrays.asList(
-                                        "AUD/CAD OTC", "AUD/CHF OTC", "AUD/JPY OTC", "CAD/CHF OTC",
-                                        "CAD/JPY OTC", "CHF/JPY OTC", "EUR/CAD OTC", "EUR/CHF OTC",
-                                        "GBP/AUD OTC", "NZD/CAD OTC", "NZD/CHF OTC", "NZD/JPY OTC",
-                                        "USD/BRL OTC", "USD/CAD OTC", "AUD/USD OTC", "USD/INR OTC",
-                                        "EUR/AUD OTC", "GBP/JPY OTC", "EUR/AUD", "EUR/GBP", "EUR/JPY",
-                                        "EUR/USD", "GBP/CAD", "GBP/JPY", "GBP/USD", "USD/JPY"
-                                ));
-                            } else {
-                                bot.execute(new SendMessage(playerId, "❌ You can't currently trade with your mode. Use /changemode command to change it."));
-                                return;
-                            }
 
                             Runnable signalGeneratorTask = () -> {
                                 int planChoose = 0;
@@ -479,7 +453,6 @@ public class BotController {
                                     e.printStackTrace();
                                 }
                                 Random random = new Random();
-                                int randomNumber = random.nextInt(listOfPairs.size());
                                 int randomUp = random.nextInt(2);
                                 String direction;
                                 if (randomUp == 0) {
@@ -510,92 +483,93 @@ public class BotController {
                                     randomAccuracy = random.nextInt(5) + 95;
                                 }
 
-
-                                String pickedPair = listOfPairs.get(randomNumber);
-                                EditMessageText editMessageText = new EditMessageText(playerId, messageId + 1, "\uD83D\uDFE2\uD83D\uDFE2").parseMode(HTML);
-                                bot.execute(editMessageText);
-                                try {
-                                    Thread.sleep(1500);
-                                } catch (InterruptedException e) {
-                                    bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again."));
-                                    e.printStackTrace();
-                                }
-                                EditMessageText editMessageTex = new EditMessageText(playerId, messageId + 1, "\uD83D\uDFE2\uD83D\uDFE2\uD83D\uDFE2").parseMode(HTML);
-                                bot.execute(editMessageTex);
-                                try {
-                                    Thread.sleep(1500);
-                                } catch (InterruptedException e) {
-                                    bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again."));
-                                    e.printStackTrace();
-                                }
-                                EditMessageText editMessageText4 = new EditMessageText(playerId, messageId + 1, "\uD83D\uDCC8The <b>" + pickedPair + "</b> asset is currently being analyzed.").parseMode(HTML);
-                                bot.execute(editMessageText4);
-                                try {
-                                    Thread.sleep(3000);
-                                } catch (InterruptedException e) {
-                                    bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again."));
-                                    e.printStackTrace();
-                                }
-                                InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-                                InlineKeyboardButton button22 = new InlineKeyboardButton("Get new signal");
-                                button22.callbackData("getSignal");
-                                inlineKeyboardMarkup.addRow(button22);
-                                EditMessageText editMessage = new EditMessageText(playerId, messageId + 1, "\uD83D\uDE80 Trading Alert: \n\uD83D\uDCC8 Asset: <b>" + pickedPair + "</b>\n" + direction + "\n⏳ Duration: <b> " + randomTime + " Minutes </b>\n\uD83C\uDFAF Accuracy: <b> " + randomAccuracy + "%</b>\n\n\uD83D\uDEA6 Trading Tips:\n" +
-                                        "\uD83D\uDC41\u200D\uD83D\uDDE8 Await the 'Start!' signal,\n" +
-                                        "\uD83D\uDCAC Make your prediction,\n" +
-                                        "\uD83D\uDCBC Secure your position, and\n" +
-                                        "\uD83D\uDCB0 Trade smartly!").parseMode(HTML);
-                                bot.execute(editMessage);
-                                try {
-                                    Thread.sleep(randomAddTime);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                Keyboard replyKeyboardMarkup = (Keyboard) new ReplyKeyboardMarkup(
-                                        new String[]{"/newsignal"});
-                                bot.execute(new SendMessage(playerId, "<b>Start!</b>").replyMarkup(replyKeyboardMarkup).parseMode(HTML));
-                                if (planChoose == 0) {
-                                    System.out.println("Im planChoose == 0");
-                                    System.out.println(messagesAfterDeposit);
-                                    if (messagesAfterDeposit < 5) {
-                                        currentUser.setMessagesAfterDeposit(messagesAfterDeposit + 1);
-                                        jedis.set(userKey, convertUserToJson(currentUser));
-                                        System.out.println("Deposit +1");
-                                    } else if (messagesAfterDeposit == 5) {
-                                        System.out.println("Done!");
-                                        InlineKeyboardMarkup inlineKeyboardMark = new InlineKeyboardMarkup();
-                                        InlineKeyboardButton button2 = new InlineKeyboardButton("Basic - 0$");
-                                        button2.callbackData("Basic");
-                                        InlineKeyboardButton button3 = new InlineKeyboardButton("Advanced - 35$");
-                                        button3.callbackData("Advanced");
-                                        InlineKeyboardButton button4 = new InlineKeyboardButton("Pro - 60$");
-                                        button4.callbackData("Pro");
-                                        inlineKeyboardMark.addRow(button2);
-                                        inlineKeyboardMark.addRow(button3);
-                                        inlineKeyboardMark.addRow(button4);
-                                        bot.execute(new SendMessage(playerId, "<b>\uD83D\uDE0A I want to remind you that you " +
-                                                "can improve the accuracy of signals!" +
-                                                " To do that, you just need to change your plan. Simply click on the plan that " +
-                                                "suits you best from the options below.\uD83D\uDCC8. You also can do it via /upgrade command.\n\n</b>" +
-                                                "<b>Basic - Signals with accuracy from 50% to 94% - Price: $0 \uD83C\uDD93\n" +
-                                                "Advanced - Signals with accuracy over 80% - Price: $35 \uD83D\uDE80\n" +
-                                                "Pro - Signals with accuracy over 95% - Price: $60</b> \uD83D\uDCAF\n\n")
-                                                .replyMarkup(replyKeyboardMarkup).parseMode(HTML).replyMarkup(inlineKeyboardMark));
-                                        System.out.println("Done 2");
+                                String pickedPair = currentUser.getPairChosen();
+                                if (Objects.equals(pickedPair, "None")) {
+                                    bot.execute(new SendMessage(playerId, "Before receiving a signal, please provide any active trading pair from Quotex" +
+                                            " for me to analyze and give you an accurate forecast. For example, send me a message like this: " +
+                                            "\"EUR/CHF OTC\". Remember that you can always change the pair using the /select command.").parseMode(HTML));
+                                } else if (pickedPair == null) {
+                                    currentUser.setPairChosen("None");
+                                    jedis.set(USER_DB_MAP_KEY + ":" + playerId, convertUserToJson(currentUser));
+                                    bot.execute(new SendMessage(playerId, "Before receiving a signal, please provide any active trading pair from Quotex" +
+                                            " for me to analyze and give you an accurate forecast. For example, send me a message like this: " +
+                                            "\"EUR/CHF OTC\". Remember that you can always change the pair using the /select command.").parseMode(HTML));
+                                } else {
+                                    EditMessageText editMessageText = new EditMessageText(playerId, messageId + 1, "\uD83D\uDFE2\uD83D\uDFE2").parseMode(HTML);
+                                    bot.execute(editMessageText);
+                                    try {
+                                        Thread.sleep(1500);
+                                    } catch (InterruptedException e) {
+                                        bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again."));
+                                        e.printStackTrace();
+                                    }
+                                    EditMessageText editMessageTex = new EditMessageText(playerId, messageId + 1, "\uD83D\uDFE2\uD83D\uDFE2\uD83D\uDFE2").parseMode(HTML);
+                                    bot.execute(editMessageTex);
+                                    try {
+                                        Thread.sleep(1500);
+                                    } catch (InterruptedException e) {
+                                        bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again."));
+                                        e.printStackTrace();
+                                    }
+                                    EditMessageText editMessageText4 = new EditMessageText(playerId, messageId + 1, "\uD83D\uDCC8The <b>" + pickedPair + "</b> asset is currently being analyzed.").parseMode(HTML);
+                                    bot.execute(editMessageText4);
+                                    try {
+                                        Thread.sleep(3000);
+                                    } catch (InterruptedException e) {
+                                        bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again."));
+                                        e.printStackTrace();
+                                    }
+                                    InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+                                    InlineKeyboardButton button22 = new InlineKeyboardButton("Get new signal");
+                                    button22.callbackData("getSignal");
+                                    inlineKeyboardMarkup.addRow(button22);
+                                    EditMessageText editMessage = new EditMessageText(playerId, messageId + 1, "\uD83D\uDE80 Trading Alert: \n\uD83D\uDCC8 Asset: <b>" + pickedPair + "</b>\n" + direction + "\n⏳ Duration: <b> " + randomTime + " Minutes </b>\n\uD83C\uDFAF Accuracy: <b> " + randomAccuracy + "%</b>\n\n\uD83D\uDEA6 Trading Tips:\n" +
+                                            "\uD83D\uDC41\u200D\uD83D\uDDE8 Await the 'Start!' signal,\n" +
+                                            "\uD83D\uDCAC Make your prediction,\n" +
+                                            "\uD83D\uDCBC Secure your position, and\n" +
+                                            "\uD83D\uDCB0 Trade smartly!").parseMode(HTML);
+                                    bot.execute(editMessage);
+                                    try {
+                                        Thread.sleep(randomAddTime);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    Keyboard replyKeyboardMarkup = (Keyboard) new ReplyKeyboardMarkup(
+                                            new String[]{"/newsignal"});
+                                    bot.execute(new SendMessage(playerId, "<b>Start!</b>").replyMarkup(replyKeyboardMarkup).parseMode(HTML));
+                                    if (planChoose == 0) {
+                                        System.out.println("Im planChoose == 0");
+                                        System.out.println(messagesAfterDeposit);
+                                        if (messagesAfterDeposit < 5) {
+                                            currentUser.setMessagesAfterDeposit(messagesAfterDeposit + 1);
+                                            jedis.set(userKey, convertUserToJson(currentUser));
+                                            System.out.println("Deposit +1");
+                                        } else if (messagesAfterDeposit == 5) {
+                                            System.out.println("Done!");
+                                            InlineKeyboardMarkup inlineKeyboardMark = new InlineKeyboardMarkup();
+                                            InlineKeyboardButton button2 = new InlineKeyboardButton("Basic - 0$");
+                                            button2.callbackData("Basic");
+                                            InlineKeyboardButton button3 = new InlineKeyboardButton("Advanced - 35$");
+                                            button3.callbackData("Advanced");
+                                            InlineKeyboardButton button4 = new InlineKeyboardButton("Pro - 60$");
+                                            button4.callbackData("Pro");
+                                            inlineKeyboardMark.addRow(button2);
+                                            inlineKeyboardMark.addRow(button3);
+                                            inlineKeyboardMark.addRow(button4);
+                                            bot.execute(new SendMessage(playerId, "<b>\uD83D\uDE0A I want to remind you that you " +
+                                                    "can improve the accuracy of signals!" +
+                                                    " To do that, you just need to change your plan. Simply click on the plan that " +
+                                                    "suits you best from the options below.\uD83D\uDCC8. You also can do it via /upgrade command.\n\n</b>" +
+                                                    "<b>Basic - Signals with accuracy from 50% to 94% - Price: $0 \uD83C\uDD93\n" +
+                                                    "Advanced - Signals with accuracy over 80% - Price: $35 \uD83D\uDE80\n" +
+                                                    "Pro - Signals with accuracy over 95% - Price: $60</b> \uD83D\uDCAF\n\n")
+                                                    .replyMarkup(replyKeyboardMarkup).parseMode(HTML).replyMarkup(inlineKeyboardMark));
+                                            System.out.println("Done 2");
+                                        }
                                     }
                                 }
                             };
                             new Thread(signalGeneratorTask).start();
-                        } else if (messageText.equals("/changeMode") || messageText.equals("/changemode")) {
-                            InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-                            InlineKeyboardButton button22 = new InlineKeyboardButton("OTC");
-                            button22.callbackData("OTC");
-                            InlineKeyboardButton button23 = new InlineKeyboardButton("None OTC");
-                            button23.callbackData("noneOTC");
-                            InlineKeyboardButton button24 = new InlineKeyboardButton("Both");
-                            button24.callbackData("both");
-                            inlineKeyboardMarkup.addRow(button22, button23, button24);
-                            bot.execute(new SendMessage(playerId, "<b>Please choose your mode!</b>").parseMode(HTML).replyMarkup(inlineKeyboardMarkup));
                         } else if (messageText.equals("/upgrade")) {
                             InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
                             InlineKeyboardButton button22 = new InlineKeyboardButton("Basic - 0$");
@@ -612,44 +586,10 @@ public class BotController {
                                     "Advanced - Signals with accuracy over 80% - Price: $35 \uD83D\uDE80\n" +
                                     "Pro - Signals with accuracy over 95% - Price: $60</b> \uD83D\uDCAF\n\n" +
                                     "<i>Please choose the plan that suits you best! </i> \uD83D\uDE04\uD83D\uDC4D").parseMode(HTML).replyMarkup(inlineKeyboardMarkup));
-                        } else if (messageCallbackText.equals("OTC")) {
-                            try {
-                                String userKey = USER_DB_MAP_KEY + ":" + playerId;
-                                User currentUser = convertJsonToUser(jedis.get(userKey));
-                                currentUser.setModeChoose(1);
-                                jedis.set(userKey, convertUserToJson(currentUser));
-                                bot.execute(new SendMessage(playerId, "<b>\uD83D\uDFE2 You successfully picked 'OTC' mode! Now you will get only OTC signals. " +
-                                        "To change it use /changemode command.</b>").parseMode(HTML));
-                            } catch (Exception e) {
-                                bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again. "));
-                                e.printStackTrace();
-                            }
-
-                        } else if (messageCallbackText.equals("noneOTC")) {
-                            try {
-                                String userKey = USER_DB_MAP_KEY + ":" + playerId;
-                                User currentUser = convertJsonToUser(jedis.get(userKey));
-                                currentUser.setModeChoose(2);
-                                jedis.set(userKey, convertUserToJson(currentUser));
-                                bot.execute(new SendMessage(playerId, "<b>\uD83D\uDFE2 You successfully picked 'None OTC' mode! Now you will get " +
-                                        "only none OTC signals. To change it use /changemode command.</b>").parseMode(HTML));
-                            } catch (Exception e) {
-                                bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again. "));
-                                e.printStackTrace();
-                            }
-                        } else if (messageCallbackText.equals("both")) {
-                            try {
-                                String userKey = USER_DB_MAP_KEY + ":" + playerId;
-                                User currentUser = convertJsonToUser(jedis.get(userKey));
-                                currentUser.setModeChoose(3);
-                                jedis.set(userKey, convertUserToJson(currentUser));
-                                bot.execute(new SendMessage(playerId, "<b>\uD83D\uDFE2 You successfully picked 'Both' mode! Now you will get all available signals. " +
-                                        "To change it use /changemode command.</b>").parseMode(HTML));
-                            } catch (Exception e) {
-                                bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again. "));
-                                e.printStackTrace();
-                            }
-
+                        } else if (messageText.equals("/select")) {
+                            bot.execute(new SendMessage(playerId, "\n" +
+                                    "Awesome! Kindly share the active " +
+                                    " currency pair so I can analyze it. \uD83D\uDCC8 For example, NZD/JPY OTC.").parseMode(HTML));
                         } else if (messageCallbackText.equals("Basic")) {
                             try {
                                 String userKey = USER_DB_MAP_KEY + ":" + playerId;
@@ -728,6 +668,45 @@ public class BotController {
                                 bot.execute(new SendMessage(playerId, "❌ There was an issue. Please try again. "));
                                 e.printStackTrace();
                             }
+                        } else {
+                            List<String> listOfPairs = Arrays.asList(
+                                    "AUD/CAD OTC", "AUD/CHF OTC", "AUD/JPY OTC", "CAD/CHF OTC",
+                                    "CAD/JPY OTC", "CHF/JPY OTC", "EUR/CAD OTC", "EUR/CHF OTC",
+                                    "GBP/AUD OTC", "NZD/CAD OTC", "NZD/CHF OTC", "NZD/JPY OTC",
+                                    "USD/BRL OTC", "USD/CAD OTC", "AUD/USD OTC", "USD/INR OTC",
+                                    "EUR/AUD OTC", "GBP/JPY OTC",
+                                    "AUD/JPY OTC", "EUR/USD OTC", "USD/ARS OTC", "USD/BDT OTC",
+                                    "USD/DZD OTC", "USD/EGP OTC", "USD/PKR OTC", "USD/NGN OTC",
+                                    "AUD/USD OTC", "EUR/AUD OTC", "EUR/JPY OTC", "GBP/AUD OTC",
+                                    "USD/COP OTC", "USD/INR OTC", "USD/TRY OTC", "CAD/CHF OTC",
+                                    "EUR/CHF OTC", "EUR/GBP OTC", "NZD/CHF OTC", "USD/CAD OTC",
+                                    "USD/CHF OTC", "EUR/CAD OTC", "GBP/JPY OTC", "NZD/CAD OTC",
+                                    "USD/JPY OTC", "USD/PHP OTC", "CAD/JPY OTC", "NZD/JPY OTC",
+                                    "USD/IDR OTC", "CHF/JPY OTC", "USD/MXN OTC",
+                                    "EUR/JPY", "EUR/GBP", "EUR/USD", "USD/JPY", "AUD/JPY",
+                                    "GBP/USD", "AUD/CHF", "EUR/AUD", "EUR/CHF", "GBP/AUD",
+                                    "GBP/JPY", "AUD/USD", "CAD/JPY", "CHF/JPY", "EUR/CAD",
+                                    "GBP/CAD", "USD/CHF", "GBP/CHF", "AUD/CAD", "USD/CAD"
+
+                            );
+
+                            String formattedText = messageText.replaceAll("[^A-Za-z0-9/]", "").replaceAll(" ", "").toUpperCase();
+                            formattedText = addSpaceAfterNthCharacter(formattedText, 7);
+                            System.out.println(formattedText);
+                            if (listOfPairs.contains(formattedText)) {
+                                User currentUser = convertJsonToUser(jedis.get(USER_DB_MAP_KEY+ ":" + playerId));
+                                currentUser.setPairChosen(formattedText);
+                                jedis.set(USER_DB_MAP_KEY+ ":" + playerId, convertUserToJson(currentUser));
+                                bot.execute(new SendMessage(playerId, "Awesome! The pair " + formattedText +
+                                        " is now live! \uD83D\uDE80 Simply enter the command /newsignal to get a precise forecast! \uD83D\uDCCA").parseMode(HTML));
+                            } else {
+                                bot.execute(new SendMessage(playerId, "Uh-oh! \uD83D\uDE2C If you want to switch the " +
+                                        "pair, make sure to write " +
+                                        "it in the correct format. For instance: NZD/JPY OTC. \n" +
+                                        "If you entered the pair correctly but see this message, " +
+                                        "it means that it's temporarily unavailable. \uD83D\uDD04 " +
+                                        "If you require further assistance, just click on /help. \uD83C\uDD98").parseMode(HTML));
+                            }
                         }
 
                     } else if (userRegistered(playerId)) {
@@ -750,7 +729,13 @@ public class BotController {
                                         bot.execute(new SendMessage(Long.valueOf(AdminID), "User with Telegram ID<code>" + playerId + "</code> and UID <code>" + sendAdminUID + "</code> \uD83D\uDFE1 deposited. Write 'Y11111111' (telegram id) to approve and 'N1111111' to disapprove").parseMode(HTML));
                                         bot.execute(new SendMessage(playerId, "\uD83D\uDCE9 Awesome! Your deposit will be checked shortly. \uD83C\uDF89\uD83D\uDC4D"));
                                     } else {
-                                        bot.execute(new SendMessage(playerId, "\uD83D\uDCE9 Please wait 30 minutes before next time pressing button."));
+                                        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+                                        InlineKeyboardButton button7 = new InlineKeyboardButton("Deposit done");
+                                        button7.callbackData("IDeposit");
+                                        inlineKeyboardMarkup.addRow(button7);
+                                        bot.execute(new SendMessage(playerId, "❌ Something went wrong. Please ensure that you have deposited at least $50 into the new account " +
+                                                "you created through the link, and then click on 'Deposit done'. \uD83D\uDCE5\uD83D\uDCB0✔\uFE0F").replyMarkup(inlineKeyboardMarkup));
+                                        bot.execute(new SendVideo(playerId, videoDepositFile));
                                     }
                                 }
 
@@ -826,7 +811,7 @@ public class BotController {
                                     inlineKeyboardMarkup.addRow(button5, button6);
                                     Date date = new Date();
                                     Date depositDate = DateUtil.addDays(date, -1);
-                                    User newUser = new User(playerName, uid, false, false, date, depositDate, 1, true, true, true, 1, 50, 0, 0);
+                                    User newUser = new User(playerName, uid, false, false, date, depositDate, 1, true, true, true, 1, 50, 0, 0, "None");
                                     bot.execute(new SendMessage(playerId, "\uD83D\uDCCC Is your ID " + uid + " correct? ✅\uD83C\uDD94").replyMarkup(inlineKeyboardMarkup).parseMode(HTML));
                                     String userKey = USER_DB_MAP_KEY + ":" + playerId;
                                     jedis.set(userKey, convertUserToJson(newUser));

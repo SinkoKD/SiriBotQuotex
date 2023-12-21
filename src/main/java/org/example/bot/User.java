@@ -20,10 +20,11 @@ public class User implements Serializable {
     private Integer messagesAfterDeposit;
 
     public User(String name, String UID, boolean registered,
-                boolean deposited, Date lastTimeTexted, Date lastTimePressedDeposit,
-                int timesTextWasSent, boolean canWriteToSupport, boolean canPressDeposit,
+                boolean deposited, Date lastTimeTexted,
+                Date lastTimePressedDeposit, int timesTextWasSent,
+                boolean canWriteToSupport, boolean canPressDeposit,
                 boolean canPressRegister, Integer modeChoose, Integer minSignalAccuracy,
-                Integer tariffUsed, Integer messagesAfterDeposit) {
+                Integer tariffUsed, Integer messagesAfterDeposit, String pairChosen) {
         this.name = name;
         this.UID = UID;
         this.registered = registered;
@@ -38,7 +39,12 @@ public class User implements Serializable {
         this.minSignalAccuracy = minSignalAccuracy;
         this.tariffUsed = tariffUsed;
         this.messagesAfterDeposit = messagesAfterDeposit;
+        this.pairChosen = pairChosen;
     }
+
+    private String pairChosen;
+
+
 
     public Integer getTariffUsed() {
         return tariffUsed;
@@ -46,6 +52,14 @@ public class User implements Serializable {
 
     public void setTariffUsed(Integer tariffUsed) {
         this.tariffUsed = tariffUsed;
+    }
+
+    public String getPairChosen() {
+        return pairChosen;
+    }
+
+    public void setPairChosen(String pairChosen) {
+        this.pairChosen = pairChosen;
     }
 
     public Integer getMessagesAfterDeposit() {

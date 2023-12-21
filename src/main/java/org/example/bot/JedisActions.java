@@ -75,6 +75,14 @@ public class JedisActions {
         }
     }
 
+    public static String addSpaceAfterNthCharacter(String text, int n) {
+        if (text.length() > n) {
+            return text.substring(0, n) + " " + text.substring(n);
+        } else {
+            return text;
+        }
+    }
+
     public static void depositDisapprove(long playerId) {
         try (Jedis jedis = jedisPool.getResource()) {
             String userKey = USER_DB_MAP_KEY + ":" + playerId;
