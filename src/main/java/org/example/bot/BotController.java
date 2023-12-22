@@ -461,7 +461,7 @@ public class BotController {
                                     direction = "\uD83D\uDD34⬇\uFE0F Signal: <b>DOWN</b> ";
                                 }
                                 int randomAddTime = random.nextInt(10000) + 8000;
-                                int randomTime = random.nextInt(3) + 1;
+                                int randomTime = random.nextInt(2) + 1;
                                 int randomAccuracy = 50;
                                 if (planChoose == 0) {
                                     randomAccuracy = random.nextInt(44) + 50;
