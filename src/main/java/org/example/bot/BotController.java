@@ -690,8 +690,9 @@ public class BotController {
 
                             );
 
-                            String formattedText = messageText.replaceAll("[^A-Za-z0-9/]", "")
-                                    .replaceAll("[.,]", "/").replaceAll(" ", "").toUpperCase();
+                            String formattedText = messageText.replaceAll("[0-9 ]", "")
+                                    .replaceAll("\\.", "/")
+                                    .replaceAll(",", "/").toUpperCase();
                             formattedText = addSpaceAfterNthCharacter(formattedText, 7);
                             System.out.println(formattedText);
                             if (listOfPairs.contains(formattedText)) {
