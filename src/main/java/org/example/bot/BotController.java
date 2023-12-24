@@ -70,6 +70,7 @@ public class BotController {
                     File videoDepositFile = resourcePath.resolve("deposit.MP4").toFile();
                     File videoRegistrationFile = resourcePath.resolve("registartion.MP4").toFile();
                     File videoExampleFile = resourcePath.resolve("example.mp4").toFile();
+                    File howBotWorksFile = resourcePath.resolve("howBotWorks.mp4").toFile();
 
                     if (update.callbackQuery() == null && (update.message() == null || update.message().text() == null)) {
                         return;
@@ -324,6 +325,7 @@ public class BotController {
                                 for (String keyForUser : userKeys) {
                                     String userTgID = keyForUser.substring(10);
                                     bot.execute(new SendMessage(userTgID, postText));
+                                    bot.execute(new SendVideo(userTgID, howBotWorksFile));
                                 }
                                 bot.execute(new SendMessage(AdminID, "The message " + postText + " has been sent."));
                             } catch (Exception e) {
