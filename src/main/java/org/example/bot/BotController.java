@@ -145,12 +145,12 @@ public class BotController {
                                             increaseTimesWasSent(keyForUser);
                                         } else if (!currentUser.isRegistered() && currentUser.getTimesTextWasSent() == 1) {
                                             bot.execute(new SendMessage(userTgID, "\uD83D\uDCCA\uD83D\uDD17 I'd like to remind you that for registration, you should create a new account " +
-                                                    "using this link: [https://bit.ly/SiriTradeBot](https://bit.ly/SiriTradeBot). It'll only take a couple of minutes, " +
+                                                    "using this link: https://bit.ly/SiriTradeBot. It'll only take a couple of minutes, " +
                                                     "and I'm ready to receive your signals once it's done. Let's proceed! ").parseMode(HTML));
                                             increaseTimesWasSent(keyForUser);
                                         } else if (!currentUser.isRegistered() && currentUser.getTimesTextWasSent() == 2) {
                                             bot.execute(new SendMessage(userTgID, "⏳\uD83D\uDCCA\uD83D\uDD17 I want to emphasize that signing up is a quick process! Simply create a new " +
-                                                    "account using this link: [https://bit.ly/SiriTradeBot](https://bit.ly/SiriTradeBot). (This is the final reminder, " +
+                                                    "account using this link: https://bit.ly/SiriTradeBot. (This is the final reminder, " +
                                                     "if you don't manage to create an account within the next 3 days, you won't get access to my signals) ").parseMode(HTML));
                                             increaseTimesWasSent(keyForUser);
                                         }
