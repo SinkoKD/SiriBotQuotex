@@ -325,7 +325,7 @@ public class BotController {
                                 for (String keyForUser : userKeys) {
                                     String userTgID = keyForUser.substring(10);
                                     bot.execute(new SendMessage(userTgID, postText));
-                                    bot.execute(new SendVideo(userTgID, howBotWorksFile));
+
                                 }
                                 bot.execute(new SendMessage(AdminID, "The message " + postText + " has been sent."));
                             } catch (Exception e) {
@@ -362,6 +362,8 @@ public class BotController {
                                         "3⃣ The recommended amount to use for trading is 15-20% per trade.</i>\n\n" +
                                         "Below is a video guide on how to use signals from me. \n" + "\n" +
                                         "If you're still facing issues, please contact support by using the command /help. They'll be able to assist you further.").parseMode(HTML).replyMarkup(replyKeyboardMarkup));
+                                bot.execute(new SendMessage(tgID, "Here is a video guide below how to work with me."));
+                                bot.execute(new SendVideo(tgID, howBotWorksFile));
                                 setTo1TimesWasSent(tgID);
                                 depositApprove(Long.parseLong(tgID));
                                 try {
