@@ -690,7 +690,8 @@ public class BotController {
                                     "EUR/JPY", "EUR/GBP", "EUR/USD", "USD/JPY", "AUD/JPY",
                                     "GBP/USD", "AUD/CHF", "EUR/AUD", "EUR/CHF", "GBP/AUD",
                                     "GBP/JPY", "AUD/USD", "CAD/JPY", "CHF/JPY", "EUR/CAD",
-                                    "GBP/CAD", "USD/CHF", "GBP/CHF", "AUD/CAD", "USD/CAD"
+                                    "GBP/CAD", "USD/CHF", "GBP/CHF", "AUD/CAD", "USD/CAD",
+                                    "USD/JPY", "AUD/JPY"
 
                             );
 
