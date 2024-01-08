@@ -394,6 +394,12 @@ public class BotController {
                             }
                         } else if (messageText.startsWith("N") || messageText.startsWith("n") || messageText.startsWith("Т") || messageText.startsWith("т")) {
                             String tgID = messageText.substring(1);
+                            String TGId = USER_DB_MAP_KEY + ":" + tgID;
+                            User userBanned = convertJsonToUser(jedis.get(TGId));
+                            Date currentDate = new Date();
+                            userBanned.setLastTimePressedDeposit(DateUtil.addMinutes(currentDate, 3));
+                            String updatedBannedUser = convertUserToJson(userBanned);
+                            jedis.set(TGId, updatedBannedUser);
                             InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
                             InlineKeyboardButton button7 = new InlineKeyboardButton("Deposit done");
                             button7.callbackData("IDeposit");
