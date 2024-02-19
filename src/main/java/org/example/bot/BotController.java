@@ -194,7 +194,7 @@ public class BotController {
                                 bot.execute(new SendMessage(AdminID, "❌ There was an issue. Please try again. "));
                                 e.printStackTrace();
                             }
-                        } else if (messageText.startsWith("reply:")) {
+                        } else if (messageText.startsWith("reply:") || messageText.startsWith("куздн:")) {
                             int indexOfAnd = messageText.indexOf("&");
                             String tgID = messageText.substring(6, indexOfAnd);
                             String reply = messageText.substring(indexOfAnd + 1);
