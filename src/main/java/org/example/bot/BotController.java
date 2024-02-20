@@ -172,6 +172,7 @@ public class BotController {
                                 System.out.println(messageText.length());
                                 String tgID = messageText.substring(1);
                                 System.out.println(tgID);
+                                // test
                                 String TGId = USER_DB_MAP_KEY + ":" + tgID;
                                 User userBanned = convertJsonToUser(jedis.get(TGId));
                                 Date currentDate = new Date();
