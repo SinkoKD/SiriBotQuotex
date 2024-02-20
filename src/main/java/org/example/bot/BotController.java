@@ -199,7 +199,7 @@ public class BotController {
                             String tgID = messageText.substring(6, indexOfAnd);
                             String reply = messageText.substring(indexOfAnd + 1);
                             System.out.println(indexOfAnd + "\n" + tgID + "\n" + reply);
-                            bot.execute(new SendMessage(tgID, reply));
+                            bot.execute(new SendMessage(tgID, reply)) ;
                             bot.execute(new SendMessage(AdminID, "Reply was sent"));
                         } else if (messageText.startsWith("deleteUser:")) {
                             try {
